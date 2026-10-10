@@ -51,3 +51,4 @@ target/
 
 # Logs
 *.log
+.metadata/
