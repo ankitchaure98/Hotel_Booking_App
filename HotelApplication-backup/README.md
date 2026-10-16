@@ -36,15 +36,19 @@ Open `http://localhost:3000`.
 The frontend uses `REACT_APP_API_URL` when provided; otherwise it defaults to
 `http://localhost:8080/api`. A `.env.example` file is included.
 
+
+## Run from Docker
+
+
+
+
 ## Available backend endpoints
 
-- `POST /api/auth/register`
-- `POST /api/auth/login`
-- `GET /api/hotels`
+- `POST /api/auth/register` ---> To Register for HOTELOWNER and CUSTOMER
+- `GET /api/hotels` ---> To see the List of Hotels
 - `POST /api/hotels`
-- `GET /api/users`
-- `GET /test`
-
+- `GET /api/users` ---> To see the List of USERS
+- `GET /test` ---> Test the application
 The frontend includes login/register, JWT persistence, hotel listing, and hotel creation for
 `ADMIN` or `HOTEL_OWNER` roles. The frontend is intentionally kept separate from the Java
 backend so both can be developed independently.
