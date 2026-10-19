@@ -5,3 +5,4 @@ metadata:
   namespace: app-ns
 data:
   database: hotel_app
+  hostname: mysql-service
