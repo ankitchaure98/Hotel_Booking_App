@@ -68,13 +68,16 @@ with nginx: docker run -d --name frontend-container --network app-net -p 3000:30
 ####DOCKER-COMPOSE####
 
 docker-compose up -d  --> To run the app
+
 docker-compose down --> Stop app
 
 ## Run from K8s
 After Apply all file
 
 kubectl port-forward service/frontend-service -n app-ns 3000:3000 --address=0.0.0.0
+
 kubectl port-forward service/backend-service -n app-ns 8080:8080 --address=0.0.0.0
+
 
 
 
