@@ -33,6 +33,13 @@ npm start
 
 Open `http://localhost:3000`.
 
+
+<img width="1872" height="861" alt="image" src="https://github.com/user-attachments/assets/26c6f50b-d311-4c29-a467-6d3cf70559ab" />
+
+
+
+
+
 The frontend uses `REACT_APP_API_URL` when provided; otherwise it defaults to
 `http://localhost:8080/api`. A `.env.example` file is included.
 
