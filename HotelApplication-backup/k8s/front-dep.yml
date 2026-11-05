@@ -17,7 +17,7 @@ spec:
     spec:
       containers:
       - name: frontend-container
-        image: ankitchaure1998/hotelapp-frontend3000:v2
+        image: ankitchaure1998/hotel_app_frontend_jenkins_3000:v5
         imagePullPolicy: Always
 
         ports:
