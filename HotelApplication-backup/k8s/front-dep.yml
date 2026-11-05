@@ -17,7 +17,9 @@ spec:
     spec:
       containers:
       - name: frontend-container
-        image: ankitchaure1998/hotelapp-nginx-frontend3000:latest
+        image: ankitchaure1998/hotelapp-frontend3000:v2
+        imagePullPolicy: Always
 
         ports:
         - containerPort: 3000
+          protocol: TCP
