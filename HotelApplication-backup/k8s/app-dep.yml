@@ -17,7 +17,7 @@ spec:
     spec:
       containers:
       - name: backend-container
-        image: ankitchaure1998/hotelapp-backend8080:latest
+        image: ankitchaure1998/hotel_app_backend_jenkins_8080:v5
 
         ports:
         - containerPort: 8080
