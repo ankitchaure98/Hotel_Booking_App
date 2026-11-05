@@ -1,0 +1,156 @@
+pipeline {
+    agent any
+    
+    environment {
+    IMAGE_TAG = 'v5'
+    }
+
+    stages {
+        stage('Check Path') {
+            steps {
+                sh 'pwd'
+            }
+        }
+        stage('Code Checkout') {
+            steps {
+                git url: 'https://github.com/ankitchaure98/Hotel_Booking_App.git', branch: 'main'
+            }
+        }
+        stage('Docker Build') {
+            steps {
+                dir('HotelApplication-backup'){
+                    sh """
+                    docker build --no-cache -t hotel_app_backend_jenkins_8080 .
+                    docker build --no-cache -t hotel_app_frontend_jenkins_3000 frontend/
+                    """
+                }
+            }
+        }
+        stage('Tests Stage') {
+            steps {
+                sh "echo This is the Testing Stage"
+            }
+        }
+        stage('Docker Push') {
+            steps {
+                withCredentials([
+                    usernamePassword(
+                        credentialsId: 'dockerHubCred',
+                        usernameVariable: 'dockerUser',
+                        passwordVariable: 'dockerPass'
+                    )
+                ]) {
+                sh """
+                docker login -u ${env.dockerUser} -p ${env.dockerPass}
+                docker image tag hotel_app_backend_jenkins_8080 ${env.dockerUser}/hotel_app_backend_jenkins_8080:${IMAGE_TAG}
+                docker image tag hotel_app_frontend_jenkins_3000 ${env.dockerUser}/hotel_app_frontend_jenkins_3000:${IMAGE_TAG}
+                
+                docker push ${env.dockerUser}/hotel_app_frontend_jenkins_3000:${IMAGE_TAG}
+                docker push ${env.dockerUser}/hotel_app_backend_jenkins_8080:${IMAGE_TAG}
+                """
+                }
+            }
+        }
+        stage('Deploy Stage') {
+            steps {
+                dir('HotelApplication-backup/k8s') {
+                    sh '''
+                        set -e
+
+                        echo "===== Applying Kubernetes Configuration ====="
+
+                        kubectl apply -f namespace.yml
+                        kubectl apply -f secret.yml
+                        kubectl apply -f configMap.yml
+                        kubectl apply -f pv.yml
+                        kubectl apply -f pvc.yml
+
+                        echo "===== Deploying MySQL ====="
+
+                        kubectl apply -f mysql-dep.yml
+                        kubectl apply -f mysql-svc.yml
+
+                        echo "===== Waiting for MySQL ====="
+
+                        kubectl rollout status deployment/mysql-deploy \
+                            -n app-ns --timeout=180s
+
+                        kubectl wait --for=condition=Ready pod \
+                            -l app=mysql -n app-ns --timeout=180s
+
+                        echo "===== MySQL is Ready ====="
+
+                        echo "===== Deploying Backend ====="
+
+                        kubectl apply -f app-dep.yml
+                        kubectl apply -f app-svc.yml
+
+                        echo "===== Waiting for Backend ====="
+
+                        kubectl rollout status deployment/backend \
+                            -n app-ns --timeout=180s
+
+                        kubectl wait --for=condition=Ready pod \
+                            -l app=backend -n app-ns --timeout=180s
+
+                        echo "===== Backend is Ready ====="
+
+                        echo "===== Deploying Frontend ====="
+
+                        kubectl apply -f front-dep.yml
+                        kubectl apply -f front-svc.yml
+
+                        echo "===== Waiting for Frontend ====="
+
+                        kubectl rollout status deployment/frontend \
+                            -n app-ns --timeout=180s
+
+                        kubectl wait --for=condition=Ready pod \
+                            -l app=frontend -n app-ns --timeout=180s
+
+                        echo "===== Frontend is Ready ====="
+                    '''
+                }
+            }
+        }
+    }
+    
+post {
+    success {
+        echo '======================================'
+        echo ' CI/CD PIPELINE SUCCESSFUL!'
+        echo ' Hotel Booking App deployed successfully.'
+        echo '======================================'
+
+        sh '''
+            echo "===== Kubernetes Deployment Status ====="
+            kubectl get deployments -n app-ns
+            kubectl get pods -n app-ns
+            kubectl get services -n app-ns
+        '''
+    }
+
+    failure {
+        echo '======================================'
+        echo ' CI/CD PIPELINE FAILED!'
+        echo ' Checking Kubernetes resources...'
+        echo '======================================'
+
+        sh '''
+            kubectl get pods -n app-ns || true
+            kubectl get deployments -n app-ns || true
+            kubectl get services -n app-ns || true
+            kubectl get events -n app-ns --sort-by=.metadata.creationTimestamp || true
+        '''
+    }
+
+    always {
+        echo '===== Pipeline Execution Completed ====='
+    }
+
+    cleanup {
+        echo '===== Jenkins Pipeline Cleanup ====='
+    }
+}
+
+}
